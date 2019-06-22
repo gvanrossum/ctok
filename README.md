@@ -4,24 +4,19 @@ CPython's tokenizer exposed as a Python class
 ```
 >>> import ctok
 >>> tok = ctok.CTok(b"(hello+world)")
->>> tok.get()
+>>> for token in tok: print(token)
+...
 (7, b'(')
->>> tok.get()
 (1, b'hello')
->>> tok.get()
 (14, b'+')
->>> tok.get()
 (1, b'world')
->>> tok.get()
 (8, b')')
->>> tok.get()
-(0, None)
->>> 
+>>>
 ```
 
 TODO
 ----
 
 - Return line number and column offset
-- Make it usable as an iterator
-- Support cloning CTok objects (to support packrat parsing)
+- Support reading from a file/stream
+- Support str instead of (or in addition to) bytes?

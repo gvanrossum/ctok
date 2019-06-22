@@ -75,7 +75,11 @@ CTok_get(CTokObject *self, PyObject *Py_UNUSED(ignored))
     char *start = NULL, *end = NULL;
     int type = PyTokenizer_Get(self->tok, &start, &end);
     if (type == ERRORTOKEN) {
-        PyErr_SetString(PyExc_RuntimeError, "invalid token");
+        PyErr_SetString(PyExc_SyntaxError, "error token");
+        return NULL;
+    }
+    if (type == ENDMARKER) {
+        PyErr_SetString(PyExc_StopIteration, "end of input");
         return NULL;
     }
 
@@ -91,6 +95,19 @@ CTok_get(CTokObject *self, PyObject *Py_UNUSED(ignored))
     }
     // TODO: lineno, col_offset, end_lineno, end_col_offset.
     return Py_BuildValue("(iO)", type, value);
+}
+
+static PyObject *
+CTok_iter(PyObject *self)
+{
+    Py_INCREF(self);
+    return self;
+}
+
+static PyObject *
+CTok_iternext(PyObject *self)
+{
+    return CTok_get((CTokObject *)self, NULL);
 }
 
 static PyMethodDef CTok_methods[] = {
@@ -111,6 +128,8 @@ static PyTypeObject CTokType = {
     .tp_init = (initproc) CTok_init,
     .tp_dealloc = (destructor) CTok_dealloc,
     .tp_methods = CTok_methods,
+    .tp_iter = CTok_iter,
+    .tp_iternext = CTok_iternext,
 };
 
 static struct PyModuleDef ctokmodule = {
