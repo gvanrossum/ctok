@@ -20,16 +20,12 @@
 
 typedef struct {
     PyObject_HEAD
-    PyObject *input;
     struct tok_state *tok;
 } CTokObject;
 
 static void
 CTok_dealloc(CTokObject *self)
 {
-    Py_XDECREF(self->input);
-    self->input = NULL;
-
     if (self->tok != NULL) {
         PyTokenizer_Free(self->tok);
         self->tok = NULL;
@@ -45,7 +41,6 @@ CTok_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self == NULL)
         return NULL;
 
-    self->input = NULL;
     self->tok = NULL;
     return (PyObject *) self;
 }
@@ -67,10 +62,25 @@ CTok_init(CTokObject *self, PyObject *args, PyObject *kwds)
     if (self->tok == NULL)
         return -1;
 
-    Py_INCREF(input);
-    self->input = input;
-
     return 0;
+}
+
+static PyObject *
+CTok_get_raw(CTokObject *self, PyObject *Py_UNUSED(ignored))
+{
+    if (self->tok == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Uninitalized tokenizer");
+        return NULL;
+    }
+
+    char *start = NULL, *end = NULL;
+    int type = PyTokenizer_Get(self->tok, &start, &end);
+    int istart = -1, iend = -1;
+    if (start != NULL)
+        istart = start - self->tok->input;
+    if (end != NULL)
+        iend = end - self->tok->input;
+    return Py_BuildValue("(iii)", type, istart, iend);
 }
 
 static PyObject *
@@ -123,6 +133,21 @@ CTok_get(CTokObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 static PyObject *
+CTok_input(CTokObject *self)
+{
+    if (self->tok == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Uninitalized tokenizer");
+        return NULL;
+    }
+
+    if (self->tok->input == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyBytes_FromString(self->tok->input);
+}
+
+static PyObject *
 CTok_iter(PyObject *self)
 {
     Py_INCREF(self);
@@ -137,7 +162,20 @@ CTok_iternext(PyObject *self)
 
 static PyMethodDef CTok_methods[] = {
     {"get", (PyCFunction) CTok_get, METH_NOARGS,
-     "Get the next token; returns (type, value)"
+     "Get the next token\n"
+     "\n"
+     "Returns (type, string, (line, col), (endline, endcol))."
+    },
+    {"get_raw", (PyCFunction) CTok_get_raw, METH_NOARGS,
+     "Get the next token without allocating much\n"
+     "\n"
+     "Returns (type, start, end) where start and end point into self.input()."
+    },
+    {"input", (PyCFunction) CTok_input, METH_NOARGS,
+     "Returns the input string as seen by the tokenizer\n"
+     "\n"
+     "This may differ from the input you passed in "
+     "due to encoding and newline normalization."
     },
     {NULL}  /* Sentinel */
 };

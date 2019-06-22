@@ -52,3 +52,22 @@ def test_multi_line_string():
     assert tokens == [
         (STRING, b"'''foo\nbar'''", start, (2, 6)),
     ]
+
+def test_input_cr():
+    input = b"foo\rbar"
+    tok = ctok.CTok(input)
+    assert tok.input() == b"foo\nbar"
+
+def test_input_crlf():
+    input = b"foo\r\nbar"
+    tok = ctok.CTok(input)
+    assert tok.input() == b"foo\nbar"
+
+def test_get_raw():
+    input = b"foo bar\r\nbaz"
+    tok = ctok.CTok(input)
+    assert tok.get_raw() == (NAME, 0, 3)
+    assert tok.get_raw() == (NAME, 4, 7)
+    assert tok.get_raw() == (NEWLINE, 7, 7)
+    assert tok.get_raw() == (NAME, 8, 11)
+    assert tok.get_raw() == (ENDMARKER, -1, -1)
