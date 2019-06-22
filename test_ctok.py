@@ -26,3 +26,14 @@ def test_indent():
         (DEDENT, None, (3, -1), (3, -1)),
         (NAME, b'pass', (3, 0), (3, 4)),
     ]
+
+def test_no_indent():
+    input = b"(foo\n  bar)"
+    tokens = list(ctok.CTok(input))
+    assert tokens == [
+        (LPAR, b'(', (1, 0), (1, 1)),
+        (NAME, b'foo', (1, 1), (1, 4)),
+        # No NEWLINE, INDENT here!
+        (NAME, b'bar', (2, 2), (2, 5)),
+        (RPAR, b')', (2, 5), (2, 6)),
+    ]
