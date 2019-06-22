@@ -2,13 +2,15 @@
 #include <Python.h>
 #include <token.h>
 
-// Bad Guido!  These are in Python/tokenizer.h which is no longer public.
-extern struct tok_state *PyTokenizer_FromString(const char *, int);
-extern struct tok_state *PyTokenizer_FromUTF8(const char *, int);
-extern struct tok_state *PyTokenizer_FromFile(FILE *, const char*,
-                                              const char *, const char *);
-extern void PyTokenizer_Free(struct tok_state *);
-extern int PyTokenizer_Get(struct tok_state *, char **, char **);
+#if PY_MAJOR_VERSION == 3
+#  if PY_MINOR_VERSION == 8 || PY_MINOR_VERSION == 9
+#    include "v38tokenizer.h"
+#  else
+#    error "Only Python 3.8 is supported"
+#  endif
+#else
+#  error "Python 2 is not supported"
+#endif
 
 typedef struct {
     PyObject_HEAD
@@ -72,6 +74,7 @@ CTok_get(CTokObject *self, PyObject *Py_UNUSED(ignored))
         PyErr_SetString(PyExc_ValueError, "Uninitalized tokenizer");
         return NULL;
     }
+
     char *start = NULL, *end = NULL;
     int type = PyTokenizer_Get(self->tok, &start, &end);
     if (type == ERRORTOKEN) {
@@ -93,8 +96,20 @@ CTok_get(CTokObject *self, PyObject *Py_UNUSED(ignored))
         if (value == NULL)
             return NULL;
     }
-    // TODO: lineno, col_offset, end_lineno, end_col_offset.
-    return Py_BuildValue("(iO)", type, value);
+
+    // After parsetok.c
+    struct tok_state *tok = self->tok;
+    int lineno = type == STRING ? tok->first_lineno : tok->lineno;
+    int end_lineno = tok->lineno;
+
+    const char *line_start = type == STRING ? tok->multi_line_start : tok->line_start;
+    int col_offset = -1, end_col_offset = -1;
+    if (start != NULL && start >= line_start)
+        col_offset = start - line_start;
+    if (end != NULL && end >= tok->line_start)
+        end_col_offset = end - tok->line_start;
+
+    return Py_BuildValue("(iO(ii)(ii))", type, value, lineno, col_offset, end_lineno, end_col_offset);
 }
 
 static PyObject *
