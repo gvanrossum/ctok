@@ -3,10 +3,16 @@
 #include <token.h>
 
 #if PY_MAJOR_VERSION == 3
-#  if PY_MINOR_VERSION == 8 || PY_MINOR_VERSION == 9
+#  if PY_MINOR_VERSION == 5
+#    include "v35tokenizer.h"
+#  elif PY_MINOR_VERSION == 6
+#    include "v36tokenizer.h"
+#  elif PY_MINOR_VERSION == 7
+#    include "v37tokenizer.h"
+#  elif PY_MINOR_VERSION >= 8
 #    include "v38tokenizer.h"
 #  else
-#    error "Only Python 3.8 is supported"
+#    error "Only Python 3.5 and higher are supported"
 #  endif
 #else
 #  error "Python 2 is not supported"
@@ -99,10 +105,14 @@ CTok_get(CTokObject *self, PyObject *Py_UNUSED(ignored))
 
     // After parsetok.c
     struct tok_state *tok = self->tok;
+#if PY_MINOR_VERSION >= 8
     int lineno = type == STRING ? tok->first_lineno : tok->lineno;
-    int end_lineno = tok->lineno;
-
     const char *line_start = type == STRING ? tok->multi_line_start : tok->line_start;
+#else
+    int lineno = tok->lineno;
+    const char *line_start = tok->line_start;
+#endif
+    int end_lineno = tok->lineno;
     int col_offset = -1, end_col_offset = -1;
     if (start != NULL && start >= line_start)
         col_offset = start - line_start;
