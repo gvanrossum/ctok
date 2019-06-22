@@ -1,4 +1,6 @@
+import sys
 from token import *
+
 import ctok
 
 def test_basic():
@@ -36,4 +38,17 @@ def test_no_indent():
         # No NEWLINE, INDENT here!
         (NAME, b'bar', (2, 2), (2, 5)),
         (RPAR, b')', (2, 5), (2, 6)),
+    ]
+
+def test_multi_line_string():
+    input = b"'''foo\nbar'''"
+    tokens = list(ctok.CTok(input))
+    if sys.version_info >= (3, 8):
+        start = (1, 0)
+    else:
+        # Older Python versions don't have the correct line number for
+        # the start of a multi-line string.
+        start = (2, -1)
+    assert tokens == [
+        (STRING, b"'''foo\nbar'''", start, (2, 6)),
     ]
