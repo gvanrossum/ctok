@@ -133,21 +133,6 @@ CTok_get(CTokObject *self, PyObject *Py_UNUSED(ignored))
 }
 
 static PyObject *
-CTok_input(CTokObject *self)
-{
-    if (self->tok == NULL) {
-        PyErr_SetString(PyExc_ValueError, "Uninitalized tokenizer");
-        return NULL;
-    }
-
-    if (self->tok->input == NULL) {
-        Py_RETURN_NONE;
-    }
-
-    return PyBytes_FromString(self->tok->input);
-}
-
-static PyObject *
 CTok_iter(PyObject *self)
 {
     Py_INCREF(self);
@@ -171,12 +156,44 @@ static PyMethodDef CTok_methods[] = {
      "\n"
      "Returns (type, start, end) where start and end point into self.input()."
     },
-    {"input", (PyCFunction) CTok_input, METH_NOARGS,
-     "Returns the input string as seen by the tokenizer\n"
-     "\n"
-     "This may differ from the input you passed in "
-     "due to encoding and newline normalization."
-    },
+    {NULL}  /* Sentinel */
+};
+
+static PyObject *
+CTok_input(CTokObject *self, void *closure)
+{
+    if (self->tok == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Uninitalized tokenizer");
+        return NULL;
+    }
+
+    if (self->tok->input == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyBytes_FromString(self->tok->input);
+}
+
+static PyObject *
+CTok_encoding(CTokObject *self, void *closure)
+{
+    if (self->tok == NULL) {
+        PyErr_SetString(PyExc_ValueError, "Uninitalized tokenizer");
+        return NULL;
+    }
+
+    if (self->tok->encoding == NULL) {
+        Py_RETURN_NONE;
+    }
+
+    return PyUnicode_FromString(self->tok->encoding);
+}
+
+static PyGetSetDef CTok_getsetters[] = {
+    {"input", (getter) CTok_input, (setter) NULL,
+     "Input string encoded by the tokenizer (bytes)", NULL},
+    {"encoding", (getter) CTok_encoding, (setter) NULL,
+     "Encoding discovered by the tokenizer", NULL},
     {NULL}  /* Sentinel */
 };
 
@@ -193,6 +210,7 @@ static PyTypeObject CTokType = {
     .tp_methods = CTok_methods,
     .tp_iter = CTok_iter,
     .tp_iternext = CTok_iternext,
+    .tp_getset = CTok_getsetters,
 };
 
 static struct PyModuleDef ctokmodule = {

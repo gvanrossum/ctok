@@ -58,12 +58,22 @@ def test_multi_line_string():
 def test_input_cr():
     input = b"foo\rbar"
     tok = ctok.CTok(input)
-    assert tok.input() == b"foo\nbar"
+    assert tok.input == b"foo\nbar"
 
 def test_input_crlf():
     input = b"foo\r\nbar"
     tok = ctok.CTok(input)
-    assert tok.input() == b"foo\nbar"
+    assert tok.input == b"foo\nbar"
+
+def test_encoding():
+    input = b"# coding: latin-1\nfoo\nbar"
+    tok = ctok.CTok(input)
+    assert tok.encoding == "iso-8859-1"
+
+def test_encoding_default():
+    input = b"foo\nbar"
+    tok = ctok.CTok(input)
+    assert tok.encoding is None
 
 def test_get_raw():
     input = b"foo bar\r\nbaz"
