@@ -94,11 +94,11 @@ CTok_get(CTokObject *self, PyObject *Py_UNUSED(ignored))
     char *start = NULL, *end = NULL;
     int type = PyTokenizer_Get(self->tok, &start, &end);
     if (type == ERRORTOKEN) {
-        PyErr_SetString(PyExc_SyntaxError, "error token");
+        PyErr_Format(PyExc_SyntaxError, "error at line %d", self->tok->lineno);
         return NULL;
     }
     if (type == ENDMARKER) {
-        PyErr_SetString(PyExc_StopIteration, "end of input");
+        PyErr_Format(PyExc_StopIteration, "end of input at line %d", self->tok->lineno);
         return NULL;
     }
 

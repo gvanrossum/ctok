@@ -1,6 +1,8 @@
 import sys
 from token import *
 
+import pytest
+
 import ctok
 
 def test_basic():
@@ -71,3 +73,23 @@ def test_get_raw():
     assert tok.get_raw() == (NEWLINE, 7, 7)
     assert tok.get_raw() == (NAME, 8, 11)
     assert tok.get_raw() == (ENDMARKER, -1, -1)
+
+def test_endmarker():
+    input = b"foo\nbar\n"
+    tok = ctok.CTok(input)
+    tok.get()
+    tok.get()
+    assert tok.get() == (NAME, b"bar", (2, 0), (2, 3))
+    assert tok.get() == (NEWLINE, b"", (2, 3), (2, 3))
+    with pytest.raises(StopIteration) as excinfo:
+        tok.get()
+    assert "end of input at line 2" in str(excinfo.value)
+
+def test_error():
+    input = b"foo\n'bar"
+    tok = ctok.CTok(input)
+    assert tok.get() == (NAME, b"foo", (1, 0), (1, 3))
+    assert tok.get()[0] == NEWLINE
+    with pytest.raises(SyntaxError) as excinfo:
+        tok.get()
+    assert "error at line 2" in str(excinfo.value)
