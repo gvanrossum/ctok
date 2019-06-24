@@ -200,17 +200,17 @@ static PyGetSetDef CTok_getsetters[] = {
 static PyTypeObject CTokType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     .tp_name = "ctok.CTok",
-    .tp_doc = "C Tokenizer",
     .tp_basicsize = sizeof(CTokObject),
     .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-    .tp_new = CTok_new,
-    .tp_init = (initproc) CTok_init,
     .tp_dealloc = (destructor) CTok_dealloc,
-    .tp_methods = CTok_methods,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_doc = "C Tokenizer",
     .tp_iter = CTok_iter,
     .tp_iternext = CTok_iternext,
+    .tp_methods = CTok_methods,
     .tp_getset = CTok_getsetters,
+    .tp_init = (initproc) CTok_init,
+    .tp_new = CTok_new,
 };
 
 static struct PyModuleDef ctokmodule = {
