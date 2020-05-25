@@ -16,6 +16,17 @@ def test_basic():
         (RPAR, b')', (1, 12), (1, 13)),
     ]
 
+def test_with_str():
+    input = "(привет+мир)"
+    tokens = list(ctok.CTok(input))
+    assert tokens == [
+        (LPAR, b'(', (1, 0), (1, 1)),
+        (NAME, 'привет'.encode("utf-8"), (1, 1), (1, 13)),
+        (PLUS, b'+', (1, 13), (1, 14)),
+        (NAME, 'мир'.encode("utf-8"), (1, 14), (1, 20)),
+        (RPAR, b')', (1, 20), (1, 21)),
+    ]
+
 def test_indent():
     input = b"if 1:\n  pass\npass"
     tokens = list(ctok.CTok(input))

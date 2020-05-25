@@ -3,12 +3,12 @@ from token import *
 
 import ctok
 
-tok = ctok.CTok(b"(hello+world)")
+tok = ctok.CTok("(hello+world)")
 for token in tok:
     print(token)
 
 print("Raw:")
-tok = ctok.CTok(b"(hello+world)")
+tok = ctok.CTok("(hello+world)")
 while True:
     token = tok.get_raw()
     print(token)
