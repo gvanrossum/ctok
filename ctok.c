@@ -49,16 +49,12 @@ static int
 CTok_init(CTokObject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"input", NULL};
-    PyObject *input;
+    Py_buffer buffer;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "S", kwlist, &input))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s*", kwlist, &buffer))
         return -1;
 
-    char *bytes = PyBytes_AsString(input);
-    if (bytes == NULL)
-        return -1;
-
-    self->tok = PyTokenizer_FromString(bytes, 0);
+    self->tok = PyTokenizer_FromString(buffer.buf, 0);
     if (self->tok == NULL)
         return -1;
 
